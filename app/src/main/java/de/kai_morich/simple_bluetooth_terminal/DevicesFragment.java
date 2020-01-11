@@ -5,9 +5,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.ListFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.ListFragment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,18 +22,15 @@ import java.util.Collections;
 public class DevicesFragment extends ListFragment {
 
     private BluetoothAdapter bluetoothAdapter;
-    private ArrayList<BluetoothDevice> listItems;
+    private ArrayList<BluetoothDevice> listItems = new ArrayList<>();
     private ArrayAdapter<BluetoothDevice> listAdapter;
-
-    public DevicesFragment() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        listItems = new ArrayList<>();
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        if(getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH))
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         listAdapter = new ArrayAdapter<BluetoothDevice>(getActivity(), 0, listItems) {
             @Override
             public View getView(int position, View view, ViewGroup parent) {
@@ -64,14 +60,14 @@ public class DevicesFragment extends ListFragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_devices, menu);
-        if(!getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH))
+        if(bluetoothAdapter == null)
             menu.findItem(R.id.bt_settings).setEnabled(false);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(bluetoothAdapter == null || !getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH))
+        if(bluetoothAdapter == null)
             setEmptyText("<bluetooth not supported>");
         else if(!bluetoothAdapter.isEnabled())
             setEmptyText("<bluetooth is disabled>");
@@ -95,7 +91,7 @@ public class DevicesFragment extends ListFragment {
 
     void refresh() {
         listItems.clear();
-        if(bluetoothAdapter!=null) {
+        if(bluetoothAdapter != null) {
             for (BluetoothDevice device : bluetoothAdapter.getBondedDevices())
                 if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE)
                     listItems.add(device);
